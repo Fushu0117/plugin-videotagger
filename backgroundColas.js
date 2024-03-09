@@ -11,7 +11,7 @@ chrome.storage.local.remove('arregloColas', function() {
 */
 /*
  var dataToSave = {
-    arregloColas: ["pruebanuevaestructurapruebaespecial,00:17:27.000,10uTwj1Gp9Ib0cceReQXdddEiGafh-bk0"],
+    arregloColas: [],
     someOtherData: 'value'
   };
   
@@ -102,7 +102,14 @@ function guardarEtiquetaWeb(etiqueta){
    fetch(
      "https://apivideotagger.borrego-research.com/webserviceontology/videotagger/videos/tag",
        init)
-     .then((response) => console.log(response))
+      .then((response) => {
+        console.log(response)
+ 
+        if(response.status !== 200){
+          throw new Error("errorGuardar");
+        }
+        
+      })
      .then(function(data) {
          console.log(data);
          chrome.storage.local.get('arregloColas', function(result) {
@@ -124,10 +131,18 @@ function guardarEtiquetaWeb(etiqueta){
           
         });
      }).catch((error) => {
-      console.error("Ha fallado la consulta de cambio de permisos con el sig error");
-      console.error(error);
-      console.error("Se reintentara el guardado dentro de 10 segundos")
-      colasWebService();
+       if(error.message === "errorGuardar"){
+         console.error("Ha fallado la consulta de cambio de guardar etiquetas con el sig error");
+         console.error(error.message);
+         console.error("Se reintentara el guardado dentro de 20 segundos")
+         setTimeout(() => {
+          colasWebService();
+         }, 20000); 
+       }else{
+         console.log("se ha insertado con exito, pero hubo un error de codigo posterior");
+         console.error(error.message);
+       }
+
      });
   }
 }

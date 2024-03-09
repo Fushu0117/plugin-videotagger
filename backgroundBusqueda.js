@@ -23,7 +23,6 @@ chrome.storage.local.set({ 'arregloBusquedaVideo': [JSON.stringify({nombreLlamad
 });
 */
 
-
 chrome.storage.local.get('arregloBusquedaVideo', function(result) {
     console.log("arreglo busqueda: ",result.arregloBusquedaVideo);
     if (!result.arregloBusquedaVideo) {
@@ -91,11 +90,20 @@ function consultarApi(primerVideo){
     fetch(
       `https://www.googleapis.com/drive/v3/files?q=mimeType contains 'video/'`,
         init)
-        .then((response) => response.json())
+        .then((response) => {
+          
+          if(response.status !== 200){
+            throw new Error("error al consultar api de drive");
+          }
+          
+          return response.json();
+
+        })
         .then(function(data) {
             const arreglo = data.files;
             console.log("arreglo completo:", arreglo);
             
+
             for (let i = 0; i < arreglo.length; i++) {
                if(arreglo[i].name.includes(primerVideo.fechaLlamada) &&  arreglo[i].name.includes(primerVideo.nombreLlamada)){
                  console.log("se encontro la llamada");
@@ -113,22 +121,22 @@ function consultarApi(primerVideo){
 
                  break;
                }else{
-                
-
+                if(i === arreglo.length-1){
+                  console.log("todavia no se encuentra el id")
+                  setTimeout(() => {
+                    colasBusquedaVideo();
+                  }, 300000);
+                }
                }
             }
             
-            console.log("todavia no se encuentra el id")
-            setTimeout(() => {
-              colasBusquedaVideo();
-           }, 300000);
         }).catch((error) => {
-            console.error("Ha fallado la consulta con el sig error");
-            console.error(error);
+          console.error("Ha fallado la consulta a drive con el sig error, se reiniciara las consultas en 10 segundos");
+          console.error(error.message);
 
-            setTimeout(() => {
-              colasBusquedaVideo();
-           }, 10000);
+          setTimeout(() => {
+            colasBusquedaVideo();
+          }, 20000);
             
         });
   }
@@ -149,7 +157,9 @@ function buscarSiguiente(infoLlamadaActualizado){
       if(result.arregloBusquedaVideo.length === 0){
         console.log("no hay mas videos para buscar en la cola") 
       }else{
-        colasBusquedaVideo();
+        setTimeout(() => {
+          colasBusquedaVideo();
+        }, 5000);
       }
     });
 

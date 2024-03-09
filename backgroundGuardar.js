@@ -76,7 +76,14 @@ function guardarVideo(videoGuardar){
      fetch(
        `https://apivideotagger.borrego-research.com/webserviceontology/videotagger/videos/save`,
          init)
-       .then((response) => response.json())
+         .then((response) => {
+          console.log(response)
+
+          if(response.status !== 201){
+            throw new Error("errorGuardar");
+          }
+        
+        })
        .then(function(data) {
            console.log(data);
            if(videoGuardar.etiquetas.length === 0){
@@ -87,13 +94,17 @@ function guardarVideo(videoGuardar){
            }           
 
        }).catch((error) => {
-        console.error("Ha fallado la consulta de guardar video con el sig error");
-        console.error(error);
-        console.error("Se reintentara el guardado dentro de 10 segundos")
-
-        setTimeout(() => {
-           colasGuardarVideo();
-        }, 10000);
+        if(error.message === "errorGuardar"){
+          console.error("Ha fallado la consulta de guardar video con el sig error");
+          console.error(error);
+          console.error("Se reintentara el guardado dentro de 20 segundos")
+  
+          setTimeout(() => {
+             colasGuardarVideo();
+          }, 20000);          
+        }else{
+          console.log("se guardo el video con exito")
+        }
        });
     }
   }
@@ -112,7 +123,8 @@ function guardarVideo(videoGuardar){
           if(result.arregloGuardar.length === 0){
             console.log("no hay mas videos del cual guardar en la ontologia") 
           }else{
-            colasGuardarVideo();
+              colasGuardarVideo();
+
           }
         });
 
